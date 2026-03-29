@@ -2,6 +2,7 @@ import HeroSection from '@/components/home/HeroSection'
 import StatsSection from '@/components/home/StatsSection'
 import PropertyTypeSection from '@/components/home/PropertyTypeSection'
 import FeaturedListings from '@/components/home/FeaturedListings'
+import HeatmapSection from '@/components/home/HeatmapSection'
 import WhyUsSection from '@/components/home/WhyUsSection'
 import CTASection from '@/components/home/CTASection'
 import { createClient } from '@/lib/supabase/server'
@@ -40,6 +41,7 @@ export default async function HomePage() {
       <StatsSection />
       <PropertyTypeSection />
       <FeaturedListings properties={featuredProperties} />
+      <HeatmapSection />
       <WhyUsSection />
       <CTASection />
     </>

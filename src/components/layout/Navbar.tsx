@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 const navLinks = [
   { href: '/properti', label: 'Properti' },
   { href: '/agen', label: 'Agen' },
-  { href: '/market', label: 'Market Insight' },
+  { href: '/peta', label: 'Harga Pasar' },
 ]
 
 export default function Navbar() {
