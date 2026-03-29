@@ -1,8 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import Image from 'next/image'
-import Link from 'next/link'
-import { ShieldCheck, Home, MapPin } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { DEMO_AGENTS, type AgentWithDetails } from '@/lib/mock-data'
 import AgentList from '@/components/agen/AgentList'
 import type { Metadata } from 'next'
 
@@ -12,12 +9,20 @@ export const metadata: Metadata = {
 }
 
 export default async function AgenPage() {
-  const supabase = await createClient()
-  const { data: agents } = await supabase
-    .from('agents')
-    .select('*, profiles(*), properties(id)')
-    .eq('is_verified', true)
-    .order('created_at', { ascending: false })
+  let agents = DEMO_AGENTS
+  try {
+    const supabase = await createClient()
+    const { data } = await supabase
+      .from('agents')
+      .select('*, profiles(*), properties(id)')
+      .eq('is_verified', true)
+      .order('created_at', { ascending: false })
+    if (data && data.length > 0) {
+      agents = data as unknown as AgentWithDetails[]
+    }
+  } catch {
+    // use demo data
+  }
 
   return (
     <div className="pt-20 min-h-screen bg-bg-primary">

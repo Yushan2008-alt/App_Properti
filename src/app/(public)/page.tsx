@@ -5,6 +5,7 @@ import FeaturedListings from '@/components/home/FeaturedListings'
 import WhyUsSection from '@/components/home/WhyUsSection'
 import CTASection from '@/components/home/CTASection'
 import { createClient } from '@/lib/supabase/server'
+import { DEMO_PROPERTIES } from '@/lib/mock-data'
 import type { PropertyWithImages } from '@/types/supabase'
 
 async function getFeaturedProperties(): Promise<PropertyWithImages[]> {
@@ -24,10 +25,10 @@ async function getFeaturedProperties(): Promise<PropertyWithImages[]> {
       .order('created_at', { ascending: false })
       .limit(8)
 
-    if (error || !data) return []
+    if (error || !data || data.length === 0) return DEMO_PROPERTIES
     return data as unknown as PropertyWithImages[]
   } catch {
-    return []
+    return DEMO_PROPERTIES
   }
 }
 
