@@ -1,0 +1,132 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-cormorant: 'Cormorant Garamond', Georgia, serif;
+  --font-playfair: 'Playfair Display', Georgia, serif;
+  --font-inter: 'Inter', system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: #FAFAF7;
+    color: #1C1917;
+    font-family: var(--font-inter);
+  }
+
+  ::selection {
+    background-color: #C9A96E;
+    color: #1C1917;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #F5F0E8;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #C9A96E;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #B8935A;
+  }
+}
+
+@layer components {
+  /* Luxury Button Variants */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent-gold text-text-on-gold font-sans font-medium text-sm rounded-sm
+    transition-all duration-200 ease-luxury
+    hover:bg-accent-gold-hover hover:shadow-gold-strong
+    active:scale-[0.97]
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-gold focus-visible:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-transparent text-text-primary font-sans font-medium text-sm rounded-sm
+    border border-border-strong
+    transition-all duration-200 ease-luxury
+    hover:border-accent-gold hover:text-accent-gold hover:bg-accent-gold-pale
+    active:scale-[0.97]
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-gold focus-visible:ring-offset-2;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 bg-transparent text-text-secondary font-sans font-medium text-sm rounded-sm
+    transition-all duration-200 ease-luxury
+    hover:text-text-primary hover:bg-bg-secondary
+    active:scale-[0.97]
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-gold focus-visible:ring-offset-2;
+  }
+
+  .btn-dark {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-bg-dark text-text-on-dark font-sans font-medium text-sm rounded-sm
+    transition-all duration-200 ease-luxury
+    hover:bg-stone-800 hover:shadow-luxury
+    active:scale-[0.97]
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-gold focus-visible:ring-offset-2;
+  }
+
+  /* Property Card */
+  .property-card {
+    @apply bg-white rounded-sm overflow-hidden shadow-luxury border border-border
+    transition-all duration-300 ease-luxury
+    hover:shadow-luxury-hover hover:-translate-y-1;
+  }
+
+  /* Input styles */
+  .input-luxury {
+    @apply w-full px-4 py-3 bg-white border border-border rounded-sm font-sans text-sm text-text-primary
+    placeholder:text-text-tertiary
+    transition-all duration-200 ease-luxury
+    focus:outline-none focus:border-accent-gold focus:ring-1 focus:ring-accent-gold/30;
+  }
+
+  /* Badge */
+  .badge-verified {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 bg-status-success-bg text-status-success text-xs font-medium rounded-sm;
+  }
+
+  .badge-gold {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 bg-accent-gold-pale text-accent-gold text-xs font-medium rounded-sm;
+  }
+
+  /* Section divider */
+  .divider-luxury {
+    @apply w-12 h-0.5 bg-accent-gold mx-auto my-4;
+  }
+
+  /* Skeleton loading */
+  .skeleton {
+    @apply bg-gradient-shimmer bg-[length:1000px_100%] animate-shimmer rounded-sm;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .container-luxury {
+    @apply max-w-container mx-auto px-4 sm:px-6 lg:px-8;
+  }
+}
