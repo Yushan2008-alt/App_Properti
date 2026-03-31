@@ -35,3 +35,6 @@ services:
       - key: NODE_ENV
         scope: RUN_AND_BUILD_TIME
         value: "production"
+      - key: NPM_CONFIG_PRODUCTION
+        scope: BUILD_TIME
+        value: "false"
