@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
 import { Upload, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { PROPERTY_TYPES, PROPERTY_STATUS } from '@/lib/utils'
@@ -14,38 +13,63 @@ const AMENITIES_OPTIONS = [
   'Dekat Sekolah', 'Dekat Mall', 'Dekat Tol', 'Dekat Stasiun',
 ]
 
+interface ImageItem {
+  url: string
+  is_primary: boolean
+  existing?: boolean  // flag for images already in DB
+  id?: string         // DB id for existing images
+}
+
 interface Props {
   agentId: string
   initialData?: any
+  propertyId?: string  // if provided → edit mode
 }
 
-export default function ListingForm({ agentId, initialData }: Props) {
+export default function ListingForm({ agentId, initialData, propertyId }: Props) {
   const router = useRouter()
+  const isEdit = !!propertyId
+
   const [form, setForm] = useState({
-    title: initialData?.title ?? '',
-    description: initialData?.description ?? '',
-    type: initialData?.type ?? 'rumah',
-    status: initialData?.status ?? 'jual',
-    price: initialData?.price ?? '',
-    land_area: initialData?.land_area ?? '',
-    building_area: initialData?.building_area ?? '',
-    bedrooms: initialData?.bedrooms ?? '',
-    bathrooms: initialData?.bathrooms ?? '',
-    city: initialData?.city ?? '',
-    district: initialData?.district ?? '',
-    address: initialData?.address ?? '',
+    title:        initialData?.title        ?? '',
+    description:  initialData?.description  ?? '',
+    type:         initialData?.type         ?? 'rumah',
+    status:       initialData?.status       ?? 'jual',
+    price:        initialData?.price        ?? '',
+    land_area:    initialData?.land_area    ?? '',
+    building_area:initialData?.building_area?? '',
+    bedrooms:     initialData?.bedrooms     ?? '',
+    bathrooms:    initialData?.bathrooms    ?? '',
+    city:         initialData?.city         ?? '',
+    district:     initialData?.district     ?? '',
+    address:      initialData?.address      ?? '',
+    latitude:     initialData?.latitude     ?? '',
+    longitude:    initialData?.longitude    ?? '',
     is_published: initialData?.is_published ?? false,
-    amenities: initialData?.amenities ?? [] as string[],
+    amenities:    (initialData?.amenities ?? []) as string[],
   })
+
+  // Populate existing images in edit mode
+  const existingImgs: ImageItem[] = (initialData?.property_images ?? [])
+    .sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+    .map((img: any) => ({
+      url: img.url,
+      is_primary: img.is_primary,
+      existing: true,
+      id: img.id,
+    }))
+
+  const [images, setImages] = useState<ImageItem[]>(existingImgs)
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [uploadedImages, setUploadedImages] = useState<{ url: string; is_primary: boolean }[]>([])
   const [error, setError] = useState('')
 
   function toggleAmenity(a: string) {
     setForm(f => ({
       ...f,
-      amenities: f.amenities.includes(a) ? f.amenities.filter((x: string) => x !== a) : [...f.amenities, a],
+      amenities: f.amenities.includes(a)
+        ? f.amenities.filter((x: string) => x !== a)
+        : [...f.amenities, a],
     }))
   }
 
@@ -58,27 +82,34 @@ export default function ListingForm({ agentId, initialData }: Props) {
     for (const file of files) {
       const ext = file.name.split('.').pop()
       const path = `properties/${agentId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const { data, error } = await supabase.storage.from('property-images').upload(path, file)
-      if (!error && data) {
-        const { data: urlData } = supabase.storage.from('property-images').getPublicUrl(path)
-        setUploadedImages(prev => [...prev, { url: urlData.publicUrl, is_primary: prev.length === 0 }])
+      const { data, error: uploadErr } = await supabase.storage
+        .from('property-images')
+        .upload(path, file)
+      if (!uploadErr && data) {
+        const { data: urlData } = supabase.storage
+          .from('property-images')
+          .getPublicUrl(path)
+        setImages(prev => [
+          ...prev,
+          { url: urlData.publicUrl, is_primary: prev.length === 0, existing: false },
+        ])
       }
     }
     setUploading(false)
   }
 
   function removeImage(url: string) {
-    setUploadedImages(prev => {
+    setImages(prev => {
       const filtered = prev.filter(i => i.url !== url)
       if (filtered.length > 0 && !filtered.some(i => i.is_primary)) {
-        filtered[0].is_primary = true
+        filtered[0] = { ...filtered[0], is_primary: true }
       }
       return filtered
     })
   }
 
   function setPrimary(url: string) {
-    setUploadedImages(prev => prev.map(i => ({ ...i, is_primary: i.url === url })))
+    setImages(prev => prev.map(i => ({ ...i, is_primary: i.url === url })))
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -91,44 +122,75 @@ export default function ListingForm({ agentId, initialData }: Props) {
     setError('')
     const supabase = createClient()
 
-    const { data: property, error: propError } = await supabase
-      .from('properties')
-      .insert({
-        agent_id: agentId,
-        title: form.title,
-        description: form.description || null,
-        type: form.type as any,
-        status: form.status as any,
-        price: Number(form.price),
-        land_area: form.land_area ? Number(form.land_area) : null,
-        building_area: form.building_area ? Number(form.building_area) : null,
-        bedrooms: form.bedrooms ? Number(form.bedrooms) : null,
-        bathrooms: form.bathrooms ? Number(form.bathrooms) : null,
-        city: form.city,
-        district: form.district || null,
-        address: form.address || null,
-        amenities: form.amenities.length > 0 ? form.amenities : null,
-        is_published: form.is_published,
-      })
-      .select()
-      .single()
-
-    if (propError || !property) {
-      setError('Gagal menyimpan listing')
-      setSaving(false)
-      return
+    const payload = {
+      title:         form.title,
+      description:   form.description   || null,
+      type:          form.type          as any,
+      status:        form.status        as any,
+      price:         Number(form.price),
+      land_area:     form.land_area     ? Number(form.land_area)     : null,
+      building_area: form.building_area ? Number(form.building_area) : null,
+      bedrooms:      form.bedrooms      ? Number(form.bedrooms)      : null,
+      bathrooms:     form.bathrooms     ? Number(form.bathrooms)     : null,
+      city:          form.city,
+      district:      form.district || null,
+      address:       form.address  || null,
+      latitude:      form.latitude  ? Number(form.latitude)  : null,
+      longitude:     form.longitude ? Number(form.longitude) : null,
+      amenities:     form.amenities.length > 0 ? form.amenities : null,
+      is_published:  form.is_published,
     }
 
-    // Upload images
-    if (uploadedImages.length > 0) {
-      await supabase.from('property_images').insert(
-        uploadedImages.map((img, i) => ({
-          property_id: property.id,
-          url: img.url,
-          is_primary: img.is_primary,
-          sort_order: i,
-        }))
-      )
+    if (isEdit) {
+      // ─── UPDATE mode ───────────────────────────────────────────────────────
+      const { error: updateErr } = await supabase
+        .from('properties')
+        .update(payload)
+        .eq('id', propertyId!)
+
+      if (updateErr) {
+        setError('Gagal menyimpan perubahan: ' + updateErr.message)
+        setSaving(false)
+        return
+      }
+
+      // Delete all old images, re-insert current list (simplest reconciliation)
+      await supabase.from('property_images').delete().eq('property_id', propertyId!)
+
+      if (images.length > 0) {
+        await supabase.from('property_images').insert(
+          images.map((img, i) => ({
+            property_id: propertyId!,
+            url: img.url,
+            is_primary: img.is_primary,
+            sort_order: i,
+          }))
+        )
+      }
+    } else {
+      // ─── INSERT mode ───────────────────────────────────────────────────────
+      const { data: property, error: propError } = await supabase
+        .from('properties')
+        .insert({ agent_id: agentId, ...payload })
+        .select()
+        .single()
+
+      if (propError || !property) {
+        setError('Gagal menyimpan listing')
+        setSaving(false)
+        return
+      }
+
+      if (images.length > 0) {
+        await supabase.from('property_images').insert(
+          images.map((img, i) => ({
+            property_id: property.id,
+            url: img.url,
+            is_primary: img.is_primary,
+            sort_order: i,
+          }))
+        )
+      }
     }
 
     router.push('/dashboard/listing')
@@ -201,10 +263,10 @@ export default function ListingForm({ agentId, initialData }: Props) {
         <h2 className="font-sans font-semibold text-text-primary mb-5">Spesifikasi</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { key: 'land_area', label: 'Luas Tanah (m²)', show: true },
+            { key: 'land_area',     label: 'Luas Tanah (m²)',    show: true },
             { key: 'building_area', label: 'Luas Bangunan (m²)', show: form.type !== 'tanah' },
-            { key: 'bedrooms', label: 'Kamar Tidur', show: !['tanah', 'gudang'].includes(form.type) },
-            { key: 'bathrooms', label: 'Kamar Mandi', show: !['tanah', 'gudang'].includes(form.type) },
+            { key: 'bedrooms',      label: 'Kamar Tidur',         show: !['tanah', 'gudang'].includes(form.type) },
+            { key: 'bathrooms',     label: 'Kamar Mandi',         show: !['tanah', 'gudang'].includes(form.type) },
           ].filter(f => f.show).map(field => (
             <div key={field.key}>
               <label className="block text-xs font-sans font-medium text-text-primary mb-1.5">{field.label}</label>
@@ -257,6 +319,36 @@ export default function ListingForm({ agentId, initialData }: Props) {
               className="input-luxury"
             />
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-sans font-medium text-text-primary mb-1.5">Latitude</label>
+              <input
+                type="number"
+                step="any"
+                value={form.latitude}
+                onChange={e => setForm(f => ({ ...f, latitude: e.target.value }))}
+                placeholder="-6.2607917"
+                className="input-luxury"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-sans font-medium text-text-primary mb-1.5">Longitude</label>
+              <input
+                type="number"
+                step="any"
+                value={form.longitude}
+                onChange={e => setForm(f => ({ ...f, longitude: e.target.value }))}
+                placeholder="106.7816878"
+                className="input-luxury"
+              />
+            </div>
+          </div>
+          <p className="text-xs text-text-tertiary font-sans">
+            Latitude &amp; Longitude diperlukan agar properti muncul di Peta Interaktif.{' '}
+            <a href="https://www.latlong.net/" target="_blank" rel="noopener noreferrer" className="underline hover:text-accent-gold">
+              Cari koordinat di latlong.net ↗
+            </a>
+          </p>
         </div>
       </div>
 
@@ -283,9 +375,11 @@ export default function ListingForm({ agentId, initialData }: Props) {
 
       {/* Photos */}
       <div className="bg-white rounded-sm border border-border shadow-luxury p-6">
-        <h2 className="font-sans font-semibold text-text-primary mb-5">Foto Properti</h2>
+        <h2 className="font-sans font-semibold text-text-primary mb-5">
+          Foto Properti
+          {images.length > 0 && <span className="ml-2 text-xs font-sans font-normal text-text-tertiary">({images.length} foto)</span>}
+        </h2>
 
-        {/* Upload zone */}
         <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-border rounded-sm cursor-pointer hover:border-accent-gold hover:bg-accent-gold-pale transition-all duration-200 mb-4">
           <Upload className="w-8 h-8 text-text-tertiary mb-2" />
           <span className="text-sm font-sans text-text-secondary">
@@ -302,11 +396,15 @@ export default function ListingForm({ agentId, initialData }: Props) {
           />
         </label>
 
-        {/* Preview */}
-        {uploadedImages.length > 0 && (
+        {images.length > 0 && (
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-            {uploadedImages.map((img, i) => (
-              <div key={img.url} className={`relative group aspect-square rounded-sm overflow-hidden border-2 ${img.is_primary ? 'border-accent-gold' : 'border-transparent'}`}>
+            {images.map((img, i) => (
+              <div
+                key={img.url}
+                className={`relative group aspect-square rounded-sm overflow-hidden border-2 ${
+                  img.is_primary ? 'border-accent-gold' : 'border-transparent'
+                }`}
+              >
                 <img src={img.url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
                   {!img.is_primary && (
@@ -339,7 +437,7 @@ export default function ListingForm({ agentId, initialData }: Props) {
               onChange={e => setForm(f => ({ ...f, is_published: e.target.checked }))}
               className="w-4 h-4 accent-accent-gold"
             />
-            <span className="text-sm font-sans text-text-primary">Langsung publish setelah disimpan</span>
+            <span className="text-sm font-sans text-text-primary">Publish listing (tampil di halaman properti)</span>
           </label>
         </div>
 
@@ -347,7 +445,7 @@ export default function ListingForm({ agentId, initialData }: Props) {
 
         <div className="flex gap-3">
           <button type="submit" disabled={saving} className="btn-primary">
-            {saving ? 'Menyimpan...' : 'Simpan Listing'}
+            {saving ? 'Menyimpan...' : isEdit ? 'Simpan Perubahan' : 'Simpan Listing'}
           </button>
           <button type="button" onClick={() => router.back()} className="btn-secondary">
             Batal
