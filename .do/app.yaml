@@ -1,0 +1,37 @@
+name: propvista
+region: sgp
+
+services:
+  - name: propvista-web
+    source_dir: /
+    github:
+      repo: Yushan2008-alt/App_Properti
+      branch: main
+      deploy_on_push: true
+    build_command: npm run build
+    run_command: npm start
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-1gb
+
+    envs:
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        scope: RUN_AND_BUILD_TIME
+        value: "PASTE_YOUR_SUPABASE_URL"
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        scope: RUN_AND_BUILD_TIME
+        value: "PASTE_YOUR_SUPABASE_ANON_KEY"
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        scope: RUN_TIME
+        type: SECRET
+        value: "PASTE_YOUR_SERVICE_ROLE_KEY"
+      - key: RESEND_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+        value: "PASTE_YOUR_RESEND_API_KEY"
+      - key: PORT
+        scope: RUN_TIME
+        value: "8080"
+      - key: NODE_ENV
+        scope: RUN_AND_BUILD_TIME
+        value: "production"

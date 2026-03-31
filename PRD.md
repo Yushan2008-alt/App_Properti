@@ -1,7 +1,7 @@
 # PRD — Aplikasi Properti Marketing
-**Versi**: 1.0
-**Tanggal**: 2026-03-29
-**Status**: Draft
+**Versi**: 1.1
+**Tanggal**: 2026-03-31
+**Status**: Active Development
 
 ---
 
@@ -180,15 +180,17 @@ PropVista adalah platform marketplace properti dua sisi (two-sided marketplace) 
 
 | Layer | Teknologi |
 |---|---|
-| **Frontend** | Next.js 14 (App Router) + TypeScript |
+| **Frontend** | Next.js 15 (App Router) + TypeScript |
 | **Styling** | Tailwind CSS (kustomisasi penuh, tidak menggunakan preset default) |
 | **Animasi** | Framer Motion + CSS custom transitions |
 | **Database** | Supabase (PostgreSQL) |
 | **Auth** | Supabase Auth (Email + Google OAuth) |
 | **Storage** | Supabase Storage (foto listing, dokumen verifikasi agen) |
-| **Maps** | Mapbox GL JS (listing detail + heatmap) |
-| **Email** | Supabase Edge Functions + Resend |
-| **Deployment** | Vercel (CI/CD otomatis dari GitHub) |
+| **Maps** | Leaflet + React-Leaflet + Leaflet.heat (OpenStreetMap, gratis) |
+| **Geocoding** | Nominatim API — OpenStreetMap (gratis, no API key) |
+| **Email** | Resend (transactional email) |
+| **Deployment** | DigitalOcean App Platform (CI/CD otomatis dari GitHub) |
+| **Container** | Node.js 20 runtime (DigitalOcean managed) |
 | **Repo** | GitHub — `Yushan2008-alt/App_Properti` |
 
 ---
@@ -373,7 +375,7 @@ transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
 | `/properti/[id]` | Detail listing + foto gallery + kontak agen + map |
 | `/agen` | Direktori semua agen terverifikasi |
 | `/agen/[slug]` | Profil publik agen + listing milik agen |
-| `/market` | Market Price Heatmap interaktif |
+| `/peta` | Peta properti interaktif + Market Price Heatmap |
 | `/login` | Halaman login (email + Google) |
 | `/register` | Registrasi (buyer atau agen) |
 
@@ -440,38 +442,64 @@ transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
 
 | Aspek | Detail |
 |---|---|
-| **Platform** | Vercel (frontend) |
-| **Database** | Supabase Cloud (PostgreSQL) |
+| **Platform** | DigitalOcean App Platform |
+| **Runtime** | Node.js 20 (managed, auto-scaling) |
+| **Region** | Singapore (SGP1) — terdekat ke Indonesia |
+| **Database** | Supabase Cloud (PostgreSQL, eksternal) |
 | **Repository** | `https://github.com/Yushan2008-alt/App_Properti` |
-| **CI/CD** | Push ke `main` → auto-deploy ke Vercel production |
+| **CI/CD** | Push ke `main` → auto-build + deploy ke DigitalOcean |
+| **Build Command** | `npm run build` |
+| **Run Command** | `npm start` |
+| **Port** | `8080` (DigitalOcean default, dikonfigurasi via `PORT` env) |
 | **Branching** | `main` (production), `dev` (development), `feature/*` |
-| **Environment Variables** | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_MAPBOX_TOKEN`, `RESEND_API_KEY` |
+| **Config File** | `.do/app.yaml` |
+| **Environment Variables** | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `PORT=8080` |
+
+### Estimasi Biaya DigitalOcean App Platform
+
+| Plan | vCPU | RAM | Harga/bulan | Cocok untuk |
+|---|---|---|---|---|
+| **Basic** | Shared | 512 MB | **$5** | Development / staging |
+| **Basic** | Shared | 1 GB | **$10** | Production ringan (< 1000 MAU) |
+| **Professional** | 1 vCPU | 2 GB | **$25** | Production medium (< 10.000 MAU) |
+
+> **Rekomendasi awal**: Plan Basic $10/bulan (1 GB RAM) — cukup untuk launch awal.
 
 ---
 
 ## 12. Roadmap
 
-### v1.0 — MVP (Foundation)
-- [ ] Setup Next.js + Supabase + Tailwind + Framer Motion
-- [ ] Auth (email + Google OAuth)
-- [ ] CRUD listing properti
-- [ ] Upload foto ke Supabase Storage
-- [ ] Halaman listing publik (browse + filter + detail)
-- [ ] Form kontak / inquiry
-- [ ] Profil agen (publik + dashboard)
-- [ ] Verified Agent Badge (upload dokumen + admin approval)
-- [ ] Deployment ke Vercel
+### v1.0 — MVP (Foundation) ✅ SELESAI
+- [x] Setup Next.js 15 + Supabase + Tailwind + Framer Motion
+- [x] Auth (email + Google OAuth)
+- [x] CRUD listing properti
+- [x] Upload foto ke Supabase Storage
+- [x] Halaman listing publik (browse + filter + detail)
+- [x] Form kontak / inquiry
+- [x] Profil agen (publik + dashboard)
+- [x] Verified Agent Badge (upload dokumen + admin approval)
+- [x] Sample data: 15 properti, 3 agen, 6 kota
 
-### v1.1 — CRM & Leads
-- [ ] Unified Lead Inbox (dashboard kanban)
-- [ ] Status pipeline drag-and-drop
+### v1.1 — CRM & Leads ✅ SELESAI
+- [x] Unified Lead Inbox (dashboard kanban + table view)
+- [x] Status pipeline (Baru → Dihubungi → Survei → Negosiasi → Closed)
+- [x] Lead notes & history
+
+### v1.2 — Intelligence ✅ SELESAI
+- [x] Market Price Heatmap (Leaflet + OpenStreetMap, gratis)
+- [x] Halaman `/peta` — peta properti interaktif dengan data real Supabase
+- [x] Search lokasi via Nominatim geocoding
+- [x] Pin properti dengan popup detail + link ke halaman listing
+- [x] Mode Heatmap + Mode Properti
+- [ ] AI Property Match (rule-based recommendation) — *next sprint*
+- [ ] Buyer preferences onboarding flow — *next sprint*
+
+### v1.3 — Deployment & Production 🔄 IN PROGRESS
+- [ ] Deploy ke DigitalOcean App Platform (Singapore)
+- [ ] Setup environment variables production
+- [ ] Custom domain (opsional)
+- [ ] Dashboard listing/[id]/edit — halaman edit listing
 - [ ] Notifikasi email lead baru (Resend)
-- [ ] Lead notes & history
-
-### v1.2 — Intelligence
-- [ ] AI Property Match (rule-based recommendation)
-- [ ] Market Price Heatmap (Mapbox heatmap layer)
-- [ ] Buyer preferences onboarding flow
 
 ### v1.3 — Trust & Analytics
 - [ ] Rating & ulasan agen (buyer bisa beri review)
