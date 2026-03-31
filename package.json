@@ -16,10 +16,18 @@
     "@hookform/resolvers": "^3.10.0",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.49.4",
+    "@types/leaflet": "^1.9.21",
+    "@types/mapbox-gl": "^3.4.1",
+    "@types/node": "^20",
+    "@types/numeral": "^2.0.5",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
     "autoprefixer": "^10.0.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
+    "eslint": "^8",
+    "eslint-config-next": "^15.3.3",
     "framer-motion": "^11.18.2",
     "leaflet": "^1.9.4",
     "leaflet.heat": "^0.2.0",
@@ -36,17 +44,8 @@
     "react-map-gl": "^7.1.8",
     "tailwind-merge": "^2.6.0",
     "tailwindcss": "^3.4.1",
+    "typescript": "^5",
     "zod": "^3.24.4"
   },
-  "devDependencies": {
-    "@types/leaflet": "^1.9.21",
-    "@types/mapbox-gl": "^3.4.1",
-    "@types/node": "^20",
-    "@types/numeral": "^2.0.5",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "eslint": "^8",
-    "eslint-config-next": "^15.3.3",
-    "typescript": "^5"
-  }
+  "devDependencies": {}
 }
