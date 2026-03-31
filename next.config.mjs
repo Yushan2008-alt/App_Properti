@@ -1,3 +1,8 @@
+import { fileURLToPath } from 'url'
+import path from 'path'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // DigitalOcean App Platform: bind ke PORT dari environment
@@ -21,6 +26,13 @@ const nextConfig = {
       },
     ],
   },
-};
+  webpack(config) {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, 'src'),
+    }
+    return config
+  },
+}
 
-export default nextConfig;
+export default nextConfig
