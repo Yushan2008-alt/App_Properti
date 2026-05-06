@@ -1,13 +1,29 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+function redirectToLogin(request: NextRequest) {
+  const url = request.nextUrl.clone()
+  url.pathname = '/login'
+  url.searchParams.set('redirect', request.nextUrl.pathname)
+  return NextResponse.redirect(url)
+}
+
 export async function middleware(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const pathname = request.nextUrl.pathname
+
+  const isDashboardRoute = pathname.startsWith('/dashboard')
+  const isAuthRoute = pathname === '/login' || pathname === '/register'
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return isDashboardRoute ? redirectToLogin(request) : NextResponse.next({ request })
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+  try {
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
         getAll() {
           return request.cookies.getAll()
@@ -20,27 +36,34 @@ export async function middleware(request: NextRequest) {
           )
         },
       },
+    })
+
+    const { data, error } = await supabase.auth.getUser()
+    if (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.error('Supabase auth error in middleware', { pathname, error: errorMessage })
+      return isDashboardRoute ? redirectToLogin(request) : supabaseResponse
     }
-  )
+    const user = data?.user ?? null
 
-  const { data: { user } } = await supabase.auth.getUser()
+    // Protect dashboard routes
+    if (isDashboardRoute && !user) {
+      return redirectToLogin(request)
+    }
 
-  // Protect dashboard routes
-  if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    url.searchParams.set('redirect', request.nextUrl.pathname)
-    return NextResponse.redirect(url)
+    // Redirect logged-in users away from auth pages
+    if (isAuthRoute && user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/dashboard'
+      return NextResponse.redirect(url)
+    }
+
+    return supabaseResponse
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error('Middleware error', { pathname, error: errorMessage })
+    return isDashboardRoute ? redirectToLogin(request) : NextResponse.next({ request })
   }
-
-  // Redirect logged-in users away from auth pages
-  if ((request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/register') && user) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
-  }
-
-  return supabaseResponse
 }
 
 export const config = {
