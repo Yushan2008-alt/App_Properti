@@ -40,7 +40,8 @@ export async function middleware(request: NextRequest) {
 
     const { data, error } = await supabase.auth.getUser()
     if (error) {
-      console.error(`Supabase auth error in middleware for ${pathname}`, error)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.error('Supabase auth error in middleware', { pathname, error: errorMessage })
       return isDashboardRoute ? redirectToLogin(request) : supabaseResponse
     }
     const user = data?.user ?? null
@@ -59,7 +60,8 @@ export async function middleware(request: NextRequest) {
 
     return supabaseResponse
   } catch (error) {
-    console.error(`Middleware error for ${pathname}`, error)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error('Middleware error', { pathname, error: errorMessage })
     return isDashboardRoute ? redirectToLogin(request) : NextResponse.next({ request })
   }
 }
