@@ -5,8 +5,17 @@ export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+  const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard')
+  const isAuthRoute = request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/register'
+  const redirectToLogin = () => {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    url.searchParams.set('redirect', request.nextUrl.pathname)
+    return NextResponse.redirect(url)
+  }
+
   if (!supabaseUrl || !supabaseAnonKey) {
-    return NextResponse.next({ request })
+    return isDashboardRoute ? redirectToLogin() : NextResponse.next({ request })
   }
 
   let supabaseResponse = NextResponse.next({ request })
@@ -30,19 +39,17 @@ export async function middleware(request: NextRequest) {
     const { data, error } = await supabase.auth.getUser()
     if (error) {
       console.error('Supabase auth error in middleware', error)
+      return isDashboardRoute ? redirectToLogin() : supabaseResponse
     }
     const user = data?.user ?? null
 
     // Protect dashboard routes
-    if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      url.searchParams.set('redirect', request.nextUrl.pathname)
-      return NextResponse.redirect(url)
+    if (isDashboardRoute && !user) {
+      return redirectToLogin()
     }
 
     // Redirect logged-in users away from auth pages
-    if ((request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/register') && user) {
+    if (isAuthRoute && user) {
       const url = request.nextUrl.clone()
       url.pathname = '/dashboard'
       return NextResponse.redirect(url)
@@ -51,7 +58,7 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   } catch (error) {
     console.error('Middleware error', error)
-    return NextResponse.next({ request })
+    return isDashboardRoute ? redirectToLogin() : NextResponse.next({ request })
   }
 }
 
