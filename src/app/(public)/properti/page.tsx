@@ -3,6 +3,7 @@ import { Search } from 'lucide-react'
 import FilterSidebar from '@/components/properti/FilterSidebar'
 import PropertyCard from '@/components/ui/PropertyCard'
 import { createClient } from '@/lib/supabase/server'
+import { DEMO_PROPERTIES } from '@/lib/mock-data'
 import type { PropertyWithImages } from '@/types/supabase'
 import type { Metadata } from 'next'
 
@@ -52,10 +53,10 @@ async function getProperties(searchParams: Awaited<PageProps['searchParams']>): 
     else query = query.order('created_at', { ascending: false })
 
     const { data, error } = await query.limit(48)
-    if (error || !data) return []
+    if (error || !data || data.length === 0) return DEMO_PROPERTIES
     return data as unknown as PropertyWithImages[]
   } catch {
-    return []
+    return DEMO_PROPERTIES
   }
 }
 
