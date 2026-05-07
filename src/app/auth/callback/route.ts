@@ -1,17 +1,11 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-
-function getNextPath(next: string | null) {
-  if (next && next.startsWith('/')) {
-    return next
-  }
-  return '/dashboard'
-}
+import { getSafeRedirectPath } from '@/lib/utils'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = getNextPath(searchParams.get('next'))
+  const next = getSafeRedirectPath(searchParams.get('next'))
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -25,7 +19,13 @@ export async function GET(request: NextRequest) {
       getAll() {
         return request.cookies.getAll()
       },
-      setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+      setAll(
+        cookiesToSet: {
+          name: string
+          value: string
+          options?: Parameters<typeof response.cookies.set>[2]
+        }[]
+      ) {
         cookiesToSet.forEach(({ name, value, options }) =>
           response.cookies.set(name, value, options)
         )

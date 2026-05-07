@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { getSafeRedirectPath } from '@/lib/utils'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -19,8 +20,7 @@ export default function LoginPage() {
       return '/dashboard'
     }
     const params = new URLSearchParams(window.location.search)
-    const redirectTarget = params.get('redirect')
-    return redirectTarget && redirectTarget.startsWith('/') ? redirectTarget : '/dashboard'
+    return getSafeRedirectPath(params.get('redirect'))
   }
 
   async function handleLogin(e: React.FormEvent) {
