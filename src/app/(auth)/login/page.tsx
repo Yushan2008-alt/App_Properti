@@ -6,15 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { getSafeRedirectPath } from '@/lib/utils'
-
-const getNextPath = () => {
-  if (typeof window === 'undefined') {
-    return '/dashboard'
-  }
-  const params = new URLSearchParams(window.location.search)
-  return getSafeRedirectPath(params.get('redirect'))
-}
+import { getSafeRedirectFromSearch } from '@/lib/utils'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -22,6 +14,13 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const getNextPath = () => {
+    if (typeof window === 'undefined') {
+      return '/dashboard'
+    }
+    return getSafeRedirectFromSearch(window.location.search)
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()

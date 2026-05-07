@@ -28,6 +28,11 @@ export function getSafeRedirectPath(target: string | null, fallback = '/dashboar
   return fallback
 }
 
+export function getSafeRedirectFromSearch(search: string | null, fallback = '/dashboard') {
+  const params = new URLSearchParams(search ?? '')
+  return getSafeRedirectPath(params.get('redirect'), fallback)
+}
+
 export const PROPERTY_TYPES = [
   { value: 'rumah', label: 'Rumah' },
   { value: 'apartemen', label: 'Apartemen' },
