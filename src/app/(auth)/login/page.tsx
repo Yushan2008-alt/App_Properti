@@ -8,20 +8,20 @@ import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getSafeRedirectPath } from '@/lib/utils'
 
+const getNextPath = () => {
+  if (typeof window === 'undefined') {
+    return '/dashboard'
+  }
+  const params = new URLSearchParams(window.location.search)
+  return getSafeRedirectPath(params.get('redirect'))
+}
+
 export default function LoginPage() {
   const router = useRouter()
   const [form, setForm] = useState({ email: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
-  const getNextPath = () => {
-    if (typeof window === 'undefined') {
-      return '/dashboard'
-    }
-    const params = new URLSearchParams(window.location.search)
-    return getSafeRedirectPath(params.get('redirect'))
-  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()

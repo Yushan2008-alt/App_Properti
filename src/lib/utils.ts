@@ -22,7 +22,7 @@ export function formatArea(area: number): string {
 }
 
 export function getSafeRedirectPath(target: string | null, fallback = '/dashboard') {
-  if (target && target.startsWith('/')) {
+  if (target && target.startsWith('/') && !target.startsWith('//')) {
     return target
   }
   return fallback
