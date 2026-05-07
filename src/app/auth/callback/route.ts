@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`)
   }
 
+  // Use explicit response cookie handling so Supabase can persist the OAuth session.
   const response = NextResponse.redirect(`${origin}${next}`)
   type CookieToSet = {
     name: string

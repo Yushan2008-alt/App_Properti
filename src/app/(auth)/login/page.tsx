@@ -16,9 +16,6 @@ export default function LoginPage() {
   const [error, setError] = useState('')
 
   const getNextPath = () => {
-    if (typeof window === 'undefined') {
-      return '/dashboard'
-    }
     return getSafeRedirectFromSearch(window.location.search)
   }
 
