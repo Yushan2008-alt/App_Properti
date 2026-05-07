@@ -14,6 +14,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const getNextPath = () => {
+    if (typeof window === 'undefined') {
+      return '/dashboard'
+    }
+    const params = new URLSearchParams(window.location.search)
+    const redirectTarget = params.get('redirect')
+    return redirectTarget && redirectTarget.startsWith('/') ? redirectTarget : '/dashboard'
+  }
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
@@ -31,15 +40,18 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/dashboard')
+    router.push(getNextPath())
     router.refresh()
   }
 
   async function handleGoogleLogin() {
     const supabase = createClient()
+    const nextPath = getNextPath()
+    const redirectUrl = new URL('/auth/callback', window.location.origin)
+    redirectUrl.searchParams.set('next', nextPath)
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: redirectUrl.toString() },
     })
   }
 
