@@ -42,7 +42,7 @@ export default function LoginPage() {
   }
 
   async function handleGoogleLogin() {
-    if (oauthLoading) return
+    if (oauthLoading || loading) return
     setOauthLoading(true)
     setError('')
     const supabase = createClient()

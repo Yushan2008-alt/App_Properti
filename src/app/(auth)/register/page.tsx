@@ -60,7 +60,7 @@ export default function RegisterPage() {
   }
 
   async function handleGoogleRegister() {
-    if (oauthLoading) return
+    if (oauthLoading || loading) return
     setOauthLoading(true)
     setError('')
     const supabase = createClient()
