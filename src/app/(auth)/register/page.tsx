@@ -19,6 +19,9 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false)
 
   const getNextPath = () => {
+    if (typeof window === 'undefined') {
+      return '/dashboard'
+    }
     return getSafeRedirectFromSearch(window.location.search)
   }
 
@@ -67,21 +70,15 @@ export default function RegisterPage() {
     const nextPath = getNextPath()
     const redirectUrl = new URL('/auth/callback', window.location.origin)
     redirectUrl.searchParams.set('next', nextPath)
-    const { data, error: err } = await supabase.auth.signInWithOAuth({
+    const { error: err } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: redirectUrl.toString(), skipBrowserRedirect: true },
+      options: { redirectTo: redirectUrl.toString() },
     })
     if (err) {
       setError(err.message || 'Gagal mendaftar dengan Google')
       setOauthLoading(false)
       return
     }
-    if (data?.url) {
-      window.location.assign(data.url)
-      return
-    }
-    setError('Gagal memulai autentikasi Google')
-    setOauthLoading(false)
   }
 
   if (success) {
