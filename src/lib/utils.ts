@@ -33,6 +33,13 @@ export function getSafeRedirectFromSearch(search: string | null, fallback = '/da
   return getSafeRedirectPath(params.get('redirect'), fallback)
 }
 
+export function getNextPathFromLocation(fallback = '/dashboard') {
+  if (typeof window === 'undefined') {
+    return fallback
+  }
+  return getSafeRedirectFromSearch(window.location.search, fallback)
+}
+
 export const PROPERTY_TYPES = [
   { value: 'rumah', label: 'Rumah' },
   { value: 'apartemen', label: 'Apartemen' },

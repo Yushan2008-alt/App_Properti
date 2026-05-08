@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { getSafeRedirectFromSearch } from '@/lib/utils'
+import { getNextPathFromLocation } from '@/lib/utils'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -16,18 +16,12 @@ export default function LoginPage() {
   const [oauthLoading, setOauthLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const getNextPath = () => {
-    if (typeof window === 'undefined') {
-      return '/dashboard'
-    }
-    return getSafeRedirectFromSearch(window.location.search)
-  }
-
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
     const supabase = createClient()
+    const nextPath = getNextPathFromLocation()
 
     const { error: err } = await supabase.auth.signInWithPassword({
       email: form.email,
@@ -40,7 +34,7 @@ export default function LoginPage() {
       return
     }
 
-    router.push(getNextPath())
+    router.push(nextPath)
     router.refresh()
   }
 
@@ -49,7 +43,7 @@ export default function LoginPage() {
     setOauthLoading(true)
     setError('')
     const supabase = createClient()
-    const nextPath = getNextPath()
+    const nextPath = getNextPathFromLocation()
     const redirectUrl = new URL('/auth/callback', window.location.origin)
     redirectUrl.searchParams.set('next', nextPath)
     const { error: err } = await supabase.auth.signInWithOAuth({

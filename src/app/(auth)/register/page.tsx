@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, Mail, Lock, User, Phone } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { getSafeRedirectFromSearch } from '@/lib/utils'
+import { getNextPathFromLocation } from '@/lib/utils'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -17,13 +17,6 @@ export default function RegisterPage() {
   const [oauthLoading, setOauthLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-
-  const getNextPath = () => {
-    if (typeof window === 'undefined') {
-      return '/dashboard'
-    }
-    return getSafeRedirectFromSearch(window.location.search)
-  }
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
@@ -62,12 +55,12 @@ export default function RegisterPage() {
     setLoading(false)
   }
 
-  async function handleGoogleRegister() {
+  async function handleGoogleOAuth() {
     if (oauthLoading || loading) return
     setOauthLoading(true)
     setError('')
     const supabase = createClient()
-    const nextPath = getNextPath()
+    const nextPath = getNextPathFromLocation()
     const redirectUrl = new URL('/auth/callback', window.location.origin)
     redirectUrl.searchParams.set('next', nextPath)
     const { error: err } = await supabase.auth.signInWithOAuth({
@@ -250,7 +243,7 @@ export default function RegisterPage() {
           </div>
 
           <button
-            onClick={handleGoogleRegister}
+            onClick={handleGoogleOAuth}
             disabled={oauthLoading || loading}
             className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-border rounded-sm text-sm font-sans font-medium text-text-primary hover:bg-bg-secondary hover:border-accent-gold/50 transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-70"
           >
