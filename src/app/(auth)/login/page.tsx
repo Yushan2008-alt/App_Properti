@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { getSafeRedirectFromSearch } from '@/lib/utils'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -13,6 +14,10 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const getNextPath = () => {
+    return getSafeRedirectFromSearch(window.location.search)
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -31,15 +36,18 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/dashboard')
+    router.push(getNextPath())
     router.refresh()
   }
 
   async function handleGoogleLogin() {
     const supabase = createClient()
+    const nextPath = getNextPath()
+    const redirectUrl = new URL('/auth/callback', window.location.origin)
+    redirectUrl.searchParams.set('next', nextPath)
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: redirectUrl.toString() },
     })
   }
 

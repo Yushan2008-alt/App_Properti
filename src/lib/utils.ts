@@ -21,6 +21,18 @@ export function formatArea(area: number): string {
   return `${area.toLocaleString('id-ID')} m²`
 }
 
+export function getSafeRedirectPath(target: string | null, fallback = '/dashboard') {
+  if (target && target.startsWith('/') && !target.startsWith('//')) {
+    return target
+  }
+  return fallback
+}
+
+export function getSafeRedirectFromSearch(search: string | null, fallback = '/dashboard') {
+  const params = new URLSearchParams(search ?? '')
+  return getSafeRedirectPath(params.get('redirect'), fallback)
+}
+
 export const PROPERTY_TYPES = [
   { value: 'rumah', label: 'Rumah' },
   { value: 'apartemen', label: 'Apartemen' },
